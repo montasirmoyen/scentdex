@@ -1,11 +1,11 @@
+"use client";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import { useState } from "react";
 import NavBar from "../../../../components/navbar";
 import fragrancesData from "../../../../data/fragrancesV2.json";
 import accords from "../../../../data/accords.json";
 import Link from "next/link";
-import FragranceGalleryClient from "../../../../components/gallery";
-import Footer from "@/components/Footer";
 
 // Add ID to each fragrance
 const fragrances = fragrancesData.map((f, index) => ({ ...f, ID: index }));
@@ -142,6 +142,21 @@ export default async function FragrancePage({ params }: Props) {
   const fragrance = fragrances.find((f) => f.ID === parseInt(awaitedParams.id));
   if (!fragrance) return notFound();
 
+  // Component to handle broken image on client side
+  const FragranceImageWithFallback = () => {
+    const [isBroken, setIsBroken] = useState(false);
+
+    return (
+      <Image
+        src={isBroken ? "/unknown.png" : fragrance["Image URL"]}
+        alt={fragrance.Name}
+        fill
+        className="object-contain rounded-lg"
+        onError={() => setIsBroken(true)}
+      />
+    );
+  };
+
   return (
     <main className="min-h-screen bg-[url('/background1.png')] bg-cover bg-center bg-fixed">
       <NavBar />
@@ -150,12 +165,7 @@ export default async function FragrancePage({ params }: Props) {
         <div className="bg-white/75 backdrop-blur-sm shadow-lg rounded-xl lg:rounded-2xl p-4 lg:p-6">
           <div className="flex flex-col md:flex-row gap-4 lg:gap-6">
             <div className="relative w-full md:w-64 h-64 md:h-80 flex-shrink-0 mx-auto md:mx-0">
-              <Image
-                src={fragrance["Image URL"]}
-                alt={fragrance.Name}
-                fill
-                className="object-contain rounded-lg"
-              />
+              <FragranceImageWithFallback />
             </div>
             <div className="flex-1">
               <h1 className="text-xl lg:text-2xl font-bold text-gray-900 mb-1">
@@ -393,7 +403,6 @@ export default async function FragrancePage({ params }: Props) {
           </div>
         </div>
       )}
-      <Footer />
     </main>
   );
 }

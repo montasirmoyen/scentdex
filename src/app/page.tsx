@@ -5,10 +5,19 @@ import Link from "next/link";
 import NavBar from "../../components/navbar";
 import fragrancesData from "../../data/fragrancesV2.json";
 import { Menu, X } from "lucide-react";
-import Footer from "@/components/Footer";
 
 // Add ID to each fragrance for routing
 const fragrances = fragrancesData.map((f, index) => ({ ...f, ID: index }));
+
+// Shuffle function
+const shuffleArray = (array: any[]) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
 
 export default function Page() {
   const [search, setSearch] = useState("");
@@ -18,9 +27,14 @@ export default function Page() {
   const [noteFilter, setNoteFilter] = useState<string | null>(null);
   const [designerSearch, setDesignerSearch] = useState("");
   const [noteSearch, setNoteSearch] = useState("");
-  const [sortBy, setSortBy] = useState("Most popular");
+  const [sortBy, setSortBy] = useState("Random");
   const [visibleCount, setVisibleCount] = useState(20);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [brokenImages, setBrokenImages] = useState<Set<number>>(new Set());
+
+  const handleImageError = (id: number) => {
+    setBrokenImages(prev => new Set([...prev, id]));
+  };
 
   const designers = useMemo(() => {
     const brands: Record<string, number> = {};
@@ -83,6 +97,8 @@ export default function Page() {
       results = results.sort((a, b) => 
         (popularityOrder[b.Popularity] || 0) - (popularityOrder[a.Popularity] || 0)
       );
+    } else if (sortBy === "Random") {
+      results = shuffleArray(results);
     } else {
       results = results.sort((a, b) => a.ID - b.ID);
     }
@@ -148,6 +164,7 @@ export default function Page() {
               value={sortBy}
               onChange={e => setSortBy(e.target.value)}
             >
+              <option>Random</option>
               <option>Most popular</option>
               <option>Highest rated</option>
               <option>Newest</option>
@@ -305,10 +322,11 @@ export default function Page() {
                 <div className="bg-white/95 rounded-xl shadow-md p-3 lg:p-4 flex flex-col hover:shadow-xl transition-all hover:scale-[1.02] h-full min-h-[280px] lg:min-h-[300px]">
                   <div className="relative w-full h-40 lg:h-48 mb-3 flex-shrink-0">
                     <Image
-                      src={f["Image URL"]}
+                      src={brokenImages.has(f.ID) ? "/unknown.png" : f["Image URL"]}
                       alt={f.Name}
                       fill
                       className="object-contain rounded-lg"
+                      onError={() => handleImageError(f.ID)}
                     />
                   </div>
                   <div className="flex-1 flex flex-col">
@@ -333,8 +351,6 @@ export default function Page() {
               </button>
             </div>
           )}
-
-          <Footer />
         </section>
       </div>
     </main>
