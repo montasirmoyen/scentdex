@@ -3,8 +3,12 @@ import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import NavBar from "../../components/navbar";
-import fragrances from "../../data/fragrances.json";
+import fragrancesData from "../../data/fragrancesV2.json";
 import { Menu, X } from "lucide-react";
+import Footer from "@/components/Footer";
+
+// Add ID to each fragrance for routing
+const fragrances = fragrancesData.map((f, index) => ({ ...f, ID: index }));
 
 export default function Page() {
   const [search, setSearch] = useState("");
@@ -29,9 +33,12 @@ export default function Page() {
   const notes = useMemo(() => {
     const noteMap: Record<string, number> = {};
     fragrances.forEach(f => {
-      Object.values(f.Notes).flat().forEach((note: string) => {
-        noteMap[note] = (noteMap[note] || 0) + 1;
-      });
+      if (f.Notes) {
+        Object.values(f.Notes).flat().forEach((note: any) => {
+          const noteName = typeof note === 'string' ? note : note.name;
+          noteMap[noteName] = (noteMap[noteName] || 0) + 1;
+        });
+      }
     });
     return Object.entries(noteMap).sort((a, b) => b[1] - a[1]);
   }, []);
@@ -44,24 +51,38 @@ export default function Page() {
       }
       if (genderFilter && f.Gender !== genderFilter) return false;
       if (designerFilter && f.Brand !== designerFilter) return false;
-      if (noteFilter && !Object.values(f.Notes).flat().includes(noteFilter)) return false;
+      if (noteFilter && f.Notes) {
+        const allNotes = Object.values(f.Notes).flat().map((note: any) => 
+          typeof note === 'string' ? note : note.name
+        );
+        if (!allNotes.includes(noteFilter)) return false;
+      }
       if (seasonFilter) {
         const seasonEntry = f["Season Ranking"]?.find(
-          (s: { name: string; value: string }) => s.name.toLowerCase() === seasonFilter.toLowerCase()
+          (s: { name: string; score: number }) => s.name.toLowerCase() === seasonFilter.toLowerCase()
         );
         if (!seasonEntry) return false;
-        const seasonValue = Number(seasonEntry.value);
-        if (seasonValue <= 90) return false;
+        const seasonScore = Number(seasonEntry.score);
+        if (seasonScore <= 0.9) return false;
       }
       return true;
     });
 
-    if (sortBy === "Longest longevity") {
-      results = results.sort((a, b) => Number(b.Longevity) - Number(a.Longevity));
-    } else if (sortBy === "Highest sillage") {
-      results = results.sort((a, b) => Number(b.Sillage) - Number(a.Sillage));
+    if (sortBy === "Highest rated") {
+      results = results.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
     } else if (sortBy === "Newest") {
-      results = results.sort((a, b) => Number(b.Release) - Number(a.Release));
+      results = results.sort((a, b) => Number(b.Year || 0) - Number(a.Year || 0));
+    } else if (sortBy === "Most popular") {
+      const popularityOrder: Record<string, number> = {
+        "Very high": 5,
+        "High": 4,
+        "Medium": 3,
+        "Low": 2,
+        "Very low": 1
+      };
+      results = results.sort((a, b) => 
+        (popularityOrder[b.Popularity] || 0) - (popularityOrder[a.Popularity] || 0)
+      );
     } else {
       results = results.sort((a, b) => a.ID - b.ID);
     }
@@ -98,9 +119,8 @@ export default function Page() {
 
       <div className="flex flex-col lg:flex-row">
         {/* LEFT SIDEBAR */}
-        <aside className={`lg:w-64 p-4 lg:p-6 bg-white/75 backdrop-blur-md transition-transform duration-300 ${
-          isFiltersOpen ? 'block' : 'hidden lg:block'
-        }`}>
+        <aside className={`lg:w-64 p-4 lg:p-6 bg-white/75 backdrop-blur-md transition-transform duration-300 ${isFiltersOpen ? 'block' : 'hidden lg:block'
+          }`}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Filters</h2>
             <button
@@ -110,7 +130,7 @@ export default function Page() {
               <X size={20} />
             </button>
           </div>
-          
+
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
@@ -129,9 +149,8 @@ export default function Page() {
               onChange={e => setSortBy(e.target.value)}
             >
               <option>Most popular</option>
+              <option>Highest rated</option>
               <option>Newest</option>
-              <option>Longest longevity</option>
-              <option>Highest sillage</option>
             </select>
           </div>
 
@@ -139,14 +158,13 @@ export default function Page() {
           <div className="mb-6">
             <p className="font-medium mb-2">Gender</p>
             <div className="flex flex-wrap gap-2">
-              {["male", "female", "unisex"].map(g => (
+              {["men", "women", "unisex"].map(g => (
                 <button
                   key={g}
-                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                    genderFilter === g 
-                      ? "bg-purple-600 text-white font-medium" 
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${genderFilter === g
+                      ? "bg-purple-600 text-white font-medium"
                       : "bg-gray-100 hover:bg-gray-200"
-                  }`}
+                    }`}
                   onClick={() => setGenderFilter(genderFilter === g ? null : g)}
                 >
                   {g.charAt(0).toUpperCase() + g.slice(1)}
@@ -159,19 +177,18 @@ export default function Page() {
           <div className="mb-6">
             <p className="font-medium mb-2">Season</p>
             <div className="flex flex-wrap gap-2">
-              {["Fall", "Spring", "Summer", "Winter"].map(season => (
+              {["fall", "spring", "summer", "winter"].map(season => (
                 <button
                   key={season}
-                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                    seasonFilter === season 
-                      ? "bg-purple-600 text-white font-medium" 
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${seasonFilter === season
+                      ? "bg-purple-600 text-white font-medium"
                       : "bg-gray-100 hover:bg-gray-200"
-                  }`}
+                    }`}
                   onClick={() =>
                     setSeasonFilter(seasonFilter === season ? null : season)
                   }
                 >
-                  {season}
+                  {season.charAt(0).toUpperCase() + season.slice(1)}
                 </button>
               ))}
             </div>
@@ -202,11 +219,10 @@ export default function Page() {
                 .map(([d, count]) => (
                   <button
                     key={d}
-                    className={`w-full text-left px-2 py-1.5 text-sm rounded-lg transition-colors ${
-                      designerFilter === d 
-                        ? "bg-blue-600 text-white font-medium" 
+                    className={`w-full text-left px-2 py-1.5 text-sm rounded-lg transition-colors ${designerFilter === d
+                        ? "bg-blue-600 text-white font-medium"
                         : "hover:bg-gray-100"
-                    }`}
+                      }`}
                     onClick={() =>
                       setDesignerFilter(designerFilter === d ? null : d)
                     }
@@ -243,11 +259,10 @@ export default function Page() {
                 .map(([note, count]) => (
                   <button
                     key={note}
-                    className={`w-full text-left px-2 py-1.5 text-sm rounded-lg transition-colors ${
-                      noteFilter === note 
-                        ? "bg-green-600 text-white font-medium" 
+                    className={`w-full text-left px-2 py-1.5 text-sm rounded-lg transition-colors ${noteFilter === note
+                        ? "bg-green-600 text-white font-medium"
                         : "hover:bg-gray-100"
-                    }`}
+                      }`}
                     onClick={() =>
                       setNoteFilter(noteFilter === note ? null : note)
                     }
@@ -319,10 +334,7 @@ export default function Page() {
             </div>
           )}
 
-          <footer className="text-center text-xs lg:text-sm text-gray-500 mt-8 mb-4 px-4">
-            Images sourced from <a href="https://www.fragrantica.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">Fragrantica</a>.
-            All rights reserved to their respective owners.
-          </footer>
+          <Footer />
         </section>
       </div>
     </main>
