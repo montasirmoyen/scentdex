@@ -322,6 +322,7 @@ export default function Page() {
                 <div className="bg-white/95 rounded-xl shadow-md p-3 lg:p-4 flex flex-col hover:shadow-xl transition-all hover:scale-[1.02] h-full min-h-[280px] lg:min-h-[300px]">
                   <div className="relative w-full h-40 lg:h-48 mb-3 flex-shrink-0">
                     <Image
+                      unoptimized
                       src={brokenImages.has(f.ID) ? "/unknown.png" : f["Image URL"]}
                       alt={f.Name}
                       fill

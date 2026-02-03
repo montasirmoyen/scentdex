@@ -45,6 +45,7 @@ export default function FragranceGalleryClient({
             className="relative w-32 h-40 sm:w-40 sm:h-52 lg:w-48 lg:h-64 flex-shrink-0 rounded-lg overflow-hidden hover:opacity-80 transition-opacity"
           >
             <Image
+              unoptimized
               src={img.url}
               alt={fragranceName}
               fill
@@ -57,7 +58,7 @@ export default function FragranceGalleryClient({
 
       {/* Modal viewer */}
       {activeImage !== null && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
           onKeyDown={handleKeyDown}
           tabIndex={0}
@@ -73,6 +74,7 @@ export default function FragranceGalleryClient({
           <div className="relative w-full h-full max-w-5xl max-h-[90vh] mx-auto px-4 flex items-center justify-center">
             <div className="relative w-full h-full max-w-5xl max-h-[90vh]">
               <Image
+                unoptimized
                 src={images[activeImage].url}
                 alt={`Fragrance photo ${activeImage + 1}`}
                 fill
@@ -103,7 +105,7 @@ export default function FragranceGalleryClient({
               </button>
             )}
           </div>
-          
+
           {/* Counter */}
           <div className="absolute top-4 left-4 text-white text-sm bg-black/70 px-3 py-1.5 rounded-lg backdrop-blur-sm">
             {activeImage + 1} / {images.length}

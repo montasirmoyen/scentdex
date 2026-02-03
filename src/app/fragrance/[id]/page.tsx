@@ -124,6 +124,7 @@ function FragranceCard({ fragrance }: { fragrance: any }) {
       <div className="bg-white shadow-md rounded-lg p-3 w-40 lg:w-48 hover:shadow-xl transition-all hover:scale-[1.02]">
         <div className="relative w-full h-28 lg:h-32 mb-2">
           <Image
+            unoptimized
             src={fragrance["Image URL"]}
             alt={fragrance.Name}
             fill
@@ -148,6 +149,7 @@ export default async function FragrancePage({ params }: Props) {
 
     return (
       <Image
+        unoptimized
         src={isBroken ? "/unknown.png" : fragrance["Image URL"]}
         alt={fragrance.Name}
         fill
@@ -223,6 +225,7 @@ export default async function FragrancePage({ params }: Props) {
               {fragrance["Season Ranking"].map((s: any) => (
                 <div key={s.name} className="flex items-center gap-3">
                   <Image
+                    unoptimized
                     src={`/${s.name.toLowerCase()}.png`}
                     alt={s.name}
                     width={28}
@@ -270,6 +273,7 @@ export default async function FragrancePage({ params }: Props) {
                 height={28}
                 className="flex-shrink-0"
                 style={{ filter: "contrast(0)" }}
+                unoptimized
               />
               <div className="flex-1 min-w-0">
                 <p className="text-sm mb-1">Longevity</p>
@@ -279,6 +283,7 @@ export default async function FragrancePage({ params }: Props) {
 
             <div className="flex items-center gap-3">
               <Image
+                unoptimized
                 src="/sillage.png"
                 alt="Sillage"
                 width={28}
@@ -308,6 +313,7 @@ export default async function FragrancePage({ params }: Props) {
                       return (
                         <span key={i} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-gray-50 text-sm lg:text-base">
                           <Image
+                            unoptimized
                             src={imgSrc}
                             alt={noteName}
                             width={32}
@@ -332,6 +338,7 @@ export default async function FragrancePage({ params }: Props) {
                       return (
                         <span key={i} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-gray-50 text-sm lg:text-base">
                           <Image
+                            unoptimized
                             src={imgSrc}
                             alt={noteName}
                             width={32}
@@ -356,6 +363,7 @@ export default async function FragrancePage({ params }: Props) {
                       return (
                         <span key={i} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-gray-50 text-sm lg:text-base">
                           <Image
+                            unoptimized
                             src={imgSrc}
                             alt={noteName}
                             width={32}
