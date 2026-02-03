@@ -27,7 +27,7 @@ export default function Page() {
   const [noteFilter, setNoteFilter] = useState<string | null>(null);
   const [designerSearch, setDesignerSearch] = useState("");
   const [noteSearch, setNoteSearch] = useState("");
-  const [sortBy, setSortBy] = useState("Random");
+  const [sortBy, setSortBy] = useState("Newest");
   const [visibleCount, setVisibleCount] = useState(20);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [brokenImages, setBrokenImages] = useState<Set<number>>(new Set());
@@ -84,8 +84,6 @@ export default function Page() {
 
     if (sortBy === "Highest rated") {
       results = results.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
-    } else if (sortBy === "Newest") {
-      results = results.sort((a, b) => Number(b.Year || 0) - Number(a.Year || 0));
     } else if (sortBy === "Most popular") {
       const popularityOrder: Record<string, number> = {
         "Very high": 5,
@@ -97,10 +95,9 @@ export default function Page() {
       results = results.sort((a, b) => 
         (popularityOrder[b.Popularity] || 0) - (popularityOrder[a.Popularity] || 0)
       );
-    } else if (sortBy === "Random") {
-      results = shuffleArray(results);
     } else {
-      results = results.sort((a, b) => a.ID - b.ID);
+      // Newest (default)
+      results = results.sort((a, b) => Number(b.Year || 0) - Number(a.Year || 0));
     }
 
     return results;
@@ -164,10 +161,9 @@ export default function Page() {
               value={sortBy}
               onChange={e => setSortBy(e.target.value)}
             >
-              <option>Random</option>
-              <option>Most popular</option>
-              <option>Highest rated</option>
               <option>Newest</option>
+              <option>Highest rated</option>
+              <option>Most popular</option>
             </select>
           </div>
 
