@@ -48,6 +48,7 @@ export default function FragranceGalleryClient({
               src={img.url}
               alt={fragranceName}
               fill
+              sizes="(max-width: 640px) 128px, 192px"
               className="object-cover rounded-lg shadow-md"
             />
           </button>
