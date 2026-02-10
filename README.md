@@ -1,5 +1,3 @@
 # ScentDex
 
-A catalog to view various fragrances
-
-Visit it here: https://fragrance-catalog.vercel.app/
+Browse, study and filter the most popular fragrances from the most luxurious brands: https://fragrance-catalog.vercel.app/
