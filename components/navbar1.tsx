@@ -127,7 +127,9 @@ const Navbar1 = ({
                 />
               )}
             </a>
-            <Sheet>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Sheet>
               <SheetTrigger render={<Button variant="outline" size="icon" />}><Menu className="size-4" /></SheetTrigger>
               <SheetContent className="overflow-y-auto">
                 <SheetHeader>
@@ -149,6 +151,7 @@ const Navbar1 = ({
                 </div>
               </SheetContent>
             </Sheet>
+            </div>
           </div>
         </div>
       </div>
