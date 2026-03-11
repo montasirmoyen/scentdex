@@ -361,30 +361,30 @@ export default function FragrancePage() {
             </div>
           </div>
 
-            {/* ── Occasions ── */}
-            {fragrance["Occasion Ranking"]?.length > 0 && (
+          {/* ── Occasions ── */}
+          {fragrance["Occasion Ranking"]?.length > 0 && (
             <div className="rounded-lg border bg-card p-4">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Occasions
+                Occasions
               </p>
               <div className="space-y-3">
-              {[...fragrance["Occasion Ranking"]]
-                .sort((a: any, b: any) => Number(b.score) - Number(a.score))
-                .map((t: any) => {
-                const pct = (parseFloat(t.score) / 3) * 100;
-                return (
-                  <div key={t.name} className="flex items-center gap-2">
-                  {getOccasionIcon(t.name)}
-                  <span className="w-24 shrink-0 capitalize text-xs font-medium">{t.name}</span>
-                  <div className="flex-1">
-                    <ProgressBar value={pct} color={getBarColor(pct)} />
-                  </div>
-                  </div>
-                );
-                })}
+                {[...fragrance["Occasion Ranking"]]
+                  .sort((a: any, b: any) => Number(b.score) - Number(a.score))
+                  .map((t: any) => {
+                    const pct = (parseFloat(t.score) / 3) * 100;
+                    return (
+                      <div key={t.name} className="flex items-center gap-2">
+                        {getOccasionIcon(t.name)}
+                        <span className="w-24 shrink-0 capitalize text-xs font-medium">{t.name}</span>
+                        <div className="flex-1">
+                          <ProgressBar value={pct} color={getBarColor(pct)} />
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
-            )}
+          )}
 
           {/* ── Fragrance Notes ── */}
           {fragrance.Notes && (
@@ -422,6 +422,9 @@ export default function FragrancePage() {
                                   width={24}
                                   height={24}
                                   className="object-contain"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "/unknown.png";
+                                  }}
                                 />
                                 {name}
                               </span>
