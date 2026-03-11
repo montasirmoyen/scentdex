@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -309,36 +310,37 @@ export default function Page() {
             <>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 xl:grid-cols-4">
                 {visibleFragrances.map((fragrance) => (
-                  <article
-                    key={fragrance.ID}
-                    className="overflow-hidden rounded-lg border bg-card transition-all hover:-translate-y-0.5 hover:shadow-md"
-                  >
-                    <div className="relative aspect-square border-b bg-white">
-                      {brokenImages.has(fragrance.ID) ? (
-                        <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">
-                          Image unavailable
-                        </div>
-                      ) : (
-                        <Image
-                          src={fragrance["Image URL"] || "/fragrances/placeholder.jpg"}
-                          alt={`${fragrance.Brand} ${fragrance.Name}`}
-                          fill
-                          sizes="(min-width: 1280px) 25vw, (min-width: 640px) 33vw, 50vw"
-                          className="object-contain p-2"
-                          onError={() => handleImageError(fragrance.ID)}
-                        />
-                      )}
-                    </div>
-
-                    <div className="space-y-1 p-3">
-                      <p className="line-clamp-1 text-sm font-semibold">{fragrance.Name}</p>
-                      <p className="line-clamp-1 text-xs text-muted-foreground">{fragrance.Brand}</p>
-                      <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{fragrance.Year || "N/A"}</span>
-                        <span>⭐ {fragrance.rating || "0.0"}</span>
+                  <Link key={fragrance.ID} href={`/fragrance/${fragrance.ID}`}>
+                    <article
+                      className="overflow-hidden rounded-lg border bg-card transition-all hover:-translate-y-0.5 hover:shadow-md"
+                    >
+                      <div className="relative aspect-square border-b bg-white">
+                        {brokenImages.has(fragrance.ID) ? (
+                          <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">
+                            Image unavailable
+                          </div>
+                        ) : (
+                          <Image
+                            src={fragrance["Image URL"] || "/fragrances/placeholder.jpg"}
+                            alt={`${fragrance.Brand} ${fragrance.Name}`}
+                            fill
+                            sizes="(min-width: 1280px) 25vw, (min-width: 640px) 33vw, 50vw"
+                            className="object-contain p-2"
+                            onError={() => handleImageError(fragrance.ID)}
+                          />
+                        )}
                       </div>
-                    </div>
-                  </article>
+
+                      <div className="space-y-1 p-3">
+                        <p className="line-clamp-1 text-sm font-semibold">{fragrance.Name}</p>
+                        <p className="line-clamp-1 text-xs text-muted-foreground">{fragrance.Brand}</p>
+                        <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                          <span>{fragrance.Year || "N/A"}</span>
+                          <span>⭐ {fragrance.rating || "0.0"}</span>
+                        </div>
+                      </div>
+                    </article>
+                  </Link>
                 ))}
               </div>
 
