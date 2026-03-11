@@ -21,6 +21,17 @@ const fragrances = fragranceData.map((f, index) => ({ ...f, ID: index }));
 const SEASONS = ["spring", "summer", "fall", "winter"];
 const SORT_OPTIONS = ["Newest", "Highest rated", "Most popular"];
 
+const DESIGNER_ALIASES: Record<string, string> = {
+  "parfums de marly": "Parfums de Marly",
+  "versace": "Versace",
+  "gianni versace": "Versace",
+  "viktor&rolf": "Viktor & Rolf",
+  "viktor & rolf": "Viktor & Rolf",
+};
+
+const normalizeDesignerName = (brand: string) =>
+  DESIGNER_ALIASES[brand.trim().toLowerCase()] || brand;
+
 export default function Page() {
   const [search, setSearch] = useState("");
   const [genderFilter, setGenderFilter] = useState<string | null>(null);
@@ -41,7 +52,8 @@ export default function Page() {
   const designers = useMemo(() => {
     const brands: Record<string, number> = {};
     fragrances.forEach((f) => {
-      brands[f.Brand] = (brands[f.Brand] || 0) + 1;
+      const normalizedBrand = normalizeDesignerName(f.Brand);
+      brands[normalizedBrand] = (brands[normalizedBrand] || 0) + 1;
     });
     return Object.entries(brands).sort((a, b) => b[1] - a[1]);
   }, []);
@@ -66,7 +78,9 @@ export default function Page() {
         if (!combined.includes(search.toLowerCase())) return false;
       }
       if (genderFilter && f.Gender !== genderFilter) return false;
-      if (designerFilter && f.Brand !== designerFilter) return false;
+      if (designerFilter && normalizeDesignerName(f.Brand) !== designerFilter) {
+        return false;
+      }
       if (noteFilter && f.Notes) {
         const allNotes = Object.values(f.Notes).flat().map((note: any) =>
           typeof note === "string" ? note : note.name
@@ -265,96 +279,99 @@ export default function Page() {
   );
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-7xl p-4 md:p-6">
-      <div className="mb-4 flex items-center justify-between gap-3 lg:hidden">
-        <h1 className="text-lg font-semibold">ScentDex</h1>
-        <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-          <SheetTrigger render={<Button variant="outline" size="sm" />}>
-            <Menu className="size-4" />
-            Filters
-          </SheetTrigger>
-          <SheetContent side="left" className="w-[88vw] max-w-sm overflow-y-auto p-0">
-            <SheetHeader className="border-b">
-              <SheetTitle>Filters</SheetTitle>
-            </SheetHeader>
-            <div className="p-4">{sidebarContent}</div>
-          </SheetContent>
-        </Sheet>
-      </div>
+    <main className="min-h-screen bg-[url('/light-background.png')] bg-cover bg-center bg-fixed dark:bg-none">
+      <section className="mx-auto max-w-7xl w-full p-4 md:p-6">
+        <div className="mb-4 flex items-center justify-between gap-3 lg:hidden">
+          <h1 className="text-lg font-semibold">ScentDex</h1>
+          <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+            <SheetTrigger render={<Button variant="outline" size="sm" />}>
+              <Menu className="size-4" />
+              Filters
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[88vw] max-w-sm overflow-y-auto p-0">
+              <SheetHeader className="border-b">
+                <SheetTitle>Filters</SheetTitle>
+              </SheetHeader>
+              <div className="p-4">{sidebarContent}</div>
+            </SheetContent>
+          </Sheet>
+        </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
-        <aside className="hidden lg:block">
-          <div className="sticky top-4 rounded-lg border bg-card p-4">{sidebarContent}</div>
-        </aside>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
+          <aside className="hidden lg:block">
+            <div className="sticky top-4 rounded-lg border bg-card p-4">{sidebarContent}</div>
+          </aside>
 
-        <section className="space-y-4">
-          <div className="rounded-lg border bg-card p-4">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by fragrance name or brand"
-                className="md:max-w-md"
-              />
-              <p className="text-sm text-muted-foreground">
-                Showing {visibleFragrances.length} of {filtered.length} fragrances
-              </p>
-            </div>
-          </div>
-
-          {visibleFragrances.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
-              No fragrances found for the selected filters.
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 xl:grid-cols-4">
-                {visibleFragrances.map((fragrance) => (
-                  <Link key={fragrance.ID} href={`/fragrance/${fragrance.ID}`}>
-                    <article
-                      className="overflow-hidden rounded-lg border bg-card transition-all hover:-translate-y-0.5 hover:shadow-md"
-                    >
-                      <div className="relative aspect-square border-b bg-white">
-                        {brokenImages.has(fragrance.ID) ? (
-                          <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">
-                            Image unavailable
-                          </div>
-                        ) : (
-                          <Image
-                            src={fragrance["Image URL"] || "/fragrances/placeholder.jpg"}
-                            alt={`${fragrance.Brand} ${fragrance.Name}`}
-                            fill
-                            sizes="(min-width: 1280px) 25vw, (min-width: 640px) 33vw, 50vw"
-                            className="object-contain p-2"
-                            onError={() => handleImageError(fragrance.ID)}
-                          />
-                        )}
-                      </div>
-
-                      <div className="space-y-1 p-3">
-                        <p className="line-clamp-1 text-sm font-semibold">{fragrance.Name}</p>
-                        <p className="line-clamp-1 text-xs text-muted-foreground">{fragrance.Brand}</p>
-                        <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                          <span>{fragrance.Year || "N/A"}</span>
-                          <span>⭐ {fragrance.rating || "0.0"}</span>
-                        </div>
-                      </div>
-                    </article>
-                  </Link>
-                ))}
+          <section className="space-y-4">
+            <div className="rounded-lg border bg-card p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by fragrance name or brand"
+                  className="md:max-w-md"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Showing {visibleFragrances.length} of {filtered.length} fragrances
+                </p>
               </div>
+            </div>
 
-              {canLoadMore && (
-                <div className="flex justify-center pt-2">
-                  <Button onClick={() => setVisibleCount((prev) => prev + 20)}>
-                    Load 20 more
-                  </Button>
+            {visibleFragrances.length === 0 ? (
+              <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
+                No fragrances found for the selected filters.
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 xl:grid-cols-4">
+                  {visibleFragrances.map((fragrance) => (
+                    <Link key={fragrance.ID} href={`/fragrance/${fragrance.ID}`}>
+                      <article
+                        className="overflow-hidden rounded-lg border bg-card transition-all hover:-translate-y-0.5 hover:shadow-md"
+                      >
+                        <div className="relative aspect-square border-b bg-white">
+                          {brokenImages.has(fragrance.ID) ? (
+                            <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">
+                              Image unavailable
+                            </div>
+                          ) : (
+                            <Image
+                              src={fragrance["Image URL"] || "/fragrances/placeholder.jpg"}
+                              alt={`${fragrance.Brand} ${fragrance.Name}`}
+                              fill
+                              sizes="(min-width: 1280px) 25vw, (min-width: 640px) 33vw, 50vw"
+                              className="object-contain p-2"
+                              onError={() => handleImageError(fragrance.ID)}
+                            />
+                          )}
+                        </div>
+
+                        <div className="space-y-1 p-3">
+                          <p className="line-clamp-1 text-sm font-semibold">{fragrance.Name}</p>
+                          <p className="line-clamp-1 text-xs text-muted-foreground">{fragrance.Brand}</p>
+                          <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                            <span>{fragrance.Year || "N/A"}</span>
+                            <span>⭐ {fragrance.rating || "0.0"}</span>
+                          </div>
+                        </div>
+                      </article>
+                    </Link>
+                  ))}
                 </div>
-              )}
-            </>
-          )}
-        </section>
-      </div>
+
+                {canLoadMore && (
+                  <div className="flex justify-center pt-2">
+                    <Button onClick={() => setVisibleCount((prev) => prev + 20)}>
+                      Load 20 more
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        </div>
+      </section>
+
     </main>
   );
 }
