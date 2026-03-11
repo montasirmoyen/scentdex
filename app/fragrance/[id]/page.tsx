@@ -213,258 +213,261 @@ export default function FragrancePage() {
   };
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-5xl p-4 md:p-6">
-      <div className="space-y-4">
-        {/* ── Hero card ── */}
-        <div className="rounded-lg border bg-card p-4 md:p-6">
-          <div className="flex flex-col gap-6 md:flex-row">
-            {/* Image */}
-            <div className="relative mx-auto h-60 w-60 shrink-0 overflow-hidden rounded-lg border bg-white md:mx-0 md:h-72 md:w-72">
-              <FragranceImage />
+    <main className="min-h-screen bg-[url('/light-background.png')] bg-cover bg-center bg-fixed dark:bg-none">
+      <div className="mx-auto w-full max-w-5xl p-4 md:p-6">
+        <div className="space-y-4">
+          {/* ── Hero card ── */}
+          <div className="rounded-lg border bg-card p-4 md:p-6">
+            <div className="flex flex-col gap-6 md:flex-row">
+              {/* Image */}
+              <div className="relative mx-auto h-60 w-60 shrink-0 overflow-hidden rounded-lg border bg-white md:mx-0 md:h-72 md:w-72">
+                <FragranceImage />
+              </div>
+
+              {/* Details */}
+              <div className="flex flex-1 flex-col gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {fragrance.Brand}
+                  </p>
+                  <h1 className="mt-1 text-2xl font-bold">{fragrance.Name}</h1>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {genderLabel(fragrance.Gender)}
+                    {fragrance.Year ? ` · ${fragrance.Year}` : ""}
+                    {fragrance.OilType ? ` · ${fragrance.OilType}` : ""}
+                  </p>
+                </div>
+
+
+                {/* Purchase */}
+                {fragrance["Purchase URL"] && (
+                  <div>
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        window.open(fragrance["Purchase URL"], "_blank", "noopener,noreferrer")
+                      }
+                    >
+                      <ExternalLink className="mr-1.5 size-3.5" />
+                      Purchase
+                    </Button>
+                  </div>
+                )}
+
+                {/* Stats row */}
+                <div className="flex flex-wrap gap-3 text-sm">
+                  {fragrance.rating && (
+                    <span className="flex items-center gap-1 rounded-md border bg-muted/40 px-2.5 py-1">
+                      <Star className="size-3.5 fill-yellow-400 text-yellow-400" />
+                      {fragrance.rating}
+                    </span>
+                  )}
+                  {fragrance.Popularity && (
+                    <span className="rounded-md border bg-muted/40 px-2.5 py-1 text-muted-foreground">
+                      {fragrance.Popularity} popularity
+                    </span>
+                  )}
+                  {fragrance["Price Value"] && (
+                    <span className="rounded-md border bg-muted/40 px-2.5 py-1 capitalize text-muted-foreground">
+                      {fragrance["Price Value"].replace("_", " ")}
+                    </span>
+                  )}
+                </div>
+
+                {/* Main Accords */}
+                {fragrance["Main Accords"]?.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Main Accords
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {fragrance["Main Accords"].map((accord: string) => {
+                        const key = accord.toLowerCase() as keyof typeof accords;
+                        const bg = accords[key] ?? "#e5e7eb";
+                        return (
+                          <span
+                            key={accord}
+                            className="rounded-md px-2.5 py-1 text-xs font-medium lowercase"
+                            style={{ backgroundColor: bg, color: getTextColor(bg) }}
+                          >
+                            {accord}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Details */}
-            <div className="flex flex-1 flex-col gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {fragrance.Brand}
-                </p>
-                <h1 className="mt-1 text-2xl font-bold">{fragrance.Name}</h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {genderLabel(fragrance.Gender)}
-                  {fragrance.Year ? ` · ${fragrance.Year}` : ""}
-                  {fragrance.OilType ? ` · ${fragrance.OilType}` : ""}
-                </p>
-              </div>
+            {/* Description */}
+            <Separator className="my-4" />
+            <p
+              className="text-sm leading-relaxed text-foreground/80"
+              dangerouslySetInnerHTML={{ __html: buildDescription(fragrance) }}
+            />
+          </div>
 
-              {/* Stats row */}
-              <div className="flex flex-wrap gap-3 text-sm">
-                {fragrance.rating && (
-                  <span className="flex items-center gap-1 rounded-md border bg-muted/40 px-2.5 py-1">
-                    <Star className="size-3.5 fill-yellow-400 text-yellow-400" />
-                    {fragrance.rating}
-                  </span>
-                )}
-                {fragrance.Popularity && (
-                  <span className="rounded-md border bg-muted/40 px-2.5 py-1 text-muted-foreground">
-                    {fragrance.Popularity} popularity
-                  </span>
-                )}
-                {fragrance["Price Value"] && (
-                  <span className="rounded-md border bg-muted/40 px-2.5 py-1 capitalize text-muted-foreground">
-                    {fragrance["Price Value"].replace("_", " ")}
-                  </span>
-                )}
-              </div>
-
-              {/* Main Accords */}
-              {fragrance["Main Accords"]?.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Main Accords
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {fragrance["Main Accords"].map((accord: string) => {
-                      const key = accord.toLowerCase() as keyof typeof accords;
-                      const bg = accords[key] ?? "#e5e7eb";
-                      return (
-                        <span
-                          key={accord}
-                          className="rounded-md px-2.5 py-1 text-xs font-medium lowercase"
-                          style={{ backgroundColor: bg, color: getTextColor(bg) }}
-                        >
-                          {accord}
-                        </span>
-                      );
-                    })}
+          {/* ── Info grid: Performance + Ideal Time ── */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* Performance */}
+            <div className="rounded-lg border bg-card p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Performance
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-muted/40">
+                    <Clock className="size-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Longevity</p>
+                    <p className="text-sm font-medium">{fragrance.Longevity || "—"}</p>
                   </div>
                 </div>
-              )}
-
-              {/* Purchase */}
-              {fragrance["Purchase URL"] && (
-                <div className="mt-auto">
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      window.open(fragrance["Purchase URL"], "_blank", "noopener,noreferrer")
-                    }
-                  >
-                    <ExternalLink className="mr-1.5 size-3.5" />
-                    Purchase
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Description */}
-          <Separator className="my-4" />
-          <p
-            className="text-sm leading-relaxed text-foreground/80"
-            dangerouslySetInnerHTML={{ __html: buildDescription(fragrance) }}
-          />
-        </div>
-
-        {/* ── Info grid: Performance + Ideal Time ── */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {/* Performance */}
-          <div className="rounded-lg border bg-card p-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Performance
-            </p>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-muted/40">
-                  <Clock className="size-4 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Longevity</p>
-                  <p className="text-sm font-medium">{fragrance.Longevity || "—"}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-muted/40">
-                  <Wind className="size-4 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Sillage</p>
-                  <p className="text-sm font-medium">{fragrance.Sillage || "—"}</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-md border bg-muted/40">
+                    <Wind className="size-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Sillage</p>
+                    <p className="text-sm font-medium">{fragrance.Sillage || "—"}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Seasons */}
-          <div className="rounded-lg border bg-card p-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Best Seasons
-            </p>
-            <div className="space-y-3">
-              {[...fragrance["Season Ranking"]]
-                .sort((a: any, b: any) => Number(b.score) - Number(a.score))
-                .map((s: any) => {
-                  const pct = (parseFloat(s.score) / 3) * 100;
-                  return (
-                    <div key={s.name} className="flex items-center gap-2">
-                      {SEASON_ICONS[s.name.toLowerCase()] ?? null}
-                      <span className="w-12 shrink-0 capitalize text-xs">{s.name}</span>
-                      <div className="flex-1">
-                        <ProgressBar value={pct} color={getBarColor(pct)} />
+            {/* Seasons */}
+            <div className="rounded-lg border bg-card p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Best Seasons
+              </p>
+              <div className="space-y-3">
+                {[...fragrance["Season Ranking"]]
+                  .sort((a: any, b: any) => Number(b.score) - Number(a.score))
+                  .map((s: any) => {
+                    const pct = (parseFloat(s.score) / 3) * 100;
+                    return (
+                      <div key={s.name} className="flex items-center gap-2">
+                        {SEASON_ICONS[s.name.toLowerCase()] ?? null}
+                        <span className="w-12 shrink-0 capitalize text-xs">{s.name}</span>
+                        <div className="flex-1">
+                          <ProgressBar value={pct} color={getBarColor(pct)} />
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* ── Occasions ── */}
-        {fragrance["Occasion Ranking"]?.length > 0 && (
-          <div className="rounded-lg border bg-card p-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {/* ── Occasions ── */}
+            {fragrance["Occasion Ranking"]?.length > 0 && (
+            <div className="rounded-lg border bg-card p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Occasions
-            </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+              </p>
+              <div className="space-y-3">
               {[...fragrance["Occasion Ranking"]]
                 .sort((a: any, b: any) => Number(b.score) - Number(a.score))
                 .map((t: any) => {
-                  const pct = (parseFloat(t.score) / 3) * 100;
+                const pct = (parseFloat(t.score) / 3) * 100;
+                return (
+                  <div key={t.name} className="flex items-center gap-2">
+                  {getOccasionIcon(t.name)}
+                  <span className="w-24 shrink-0 capitalize text-xs font-medium">{t.name}</span>
+                  <div className="flex-1">
+                    <ProgressBar value={pct} color={getBarColor(pct)} />
+                  </div>
+                  </div>
+                );
+                })}
+              </div>
+            </div>
+            )}
+
+          {/* ── Fragrance Notes ── */}
+          {fragrance.Notes && (
+            <div className="rounded-lg border bg-card p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Fragrance Notes
+              </p>
+              <Accordion className="divide-y rounded-md border">
+                {[
+                  { label: "Top Notes", notes: fragrance.Notes.Top },
+                  { label: "Middle Notes", notes: fragrance.Notes.Middle },
+                  { label: "Base Notes", notes: fragrance.Notes.Base },
+                ].map(({ label, notes: noteGroup }) => {
+                  if (!noteGroup?.length) return null;
                   return (
-                    <div key={t.name} className="flex items-center gap-2">
-                      {getOccasionIcon(t.name)}
-                      <span className="w-20 shrink-0 capitalize text-xs">{t.name}</span>
-                      <div className="flex-1">
-                        <ProgressBar value={pct} color={getBarColor(pct)} />
-                      </div>
-                    </div>
+                    <AccordionItem key={label} value={label} className="border-none px-4">
+                      <AccordionTrigger className="text-sm font-medium">{label}</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="flex flex-wrap gap-2 pb-1">
+                          {noteGroup.map((note: any, i: number) => {
+                            const name = typeof note === "string" ? note : note.name;
+                            const img =
+                              typeof note === "object" && note.imageUrl
+                                ? note.imageUrl
+                                : "/unknown.png";
+                            return (
+                              <span
+                                key={i}
+                                className="flex items-center gap-1.5 rounded-md border bg-muted/40 px-2 py-1.5 text-xs"
+                              >
+                                <Image
+                                  unoptimized
+                                  src={img}
+                                  alt={name}
+                                  width={24}
+                                  height={24}
+                                  className="object-contain"
+                                />
+                                {name}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
                   );
                 })}
+              </Accordion>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ── Fragrance Notes ── */}
-        {fragrance.Notes && (
-          <div className="rounded-lg border bg-card p-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Fragrance Notes
-            </p>
-            <Accordion className="divide-y rounded-md border">
-              {[
-                { label: "Top Notes", notes: fragrance.Notes.Top },
-                { label: "Middle Notes", notes: fragrance.Notes.Middle },
-                { label: "Base Notes", notes: fragrance.Notes.Base },
-              ].map(({ label, notes: noteGroup }) => {
-                if (!noteGroup?.length) return null;
-                return (
-                  <AccordionItem key={label} value={label} className="border-none px-4">
-                    <AccordionTrigger className="text-sm font-medium">{label}</AccordionTrigger>
-                    <AccordionContent>
-                      <div className="flex flex-wrap gap-2 pb-1">
-                        {noteGroup.map((note: any, i: number) => {
-                          const name = typeof note === "string" ? note : note.name;
-                          const img =
-                            typeof note === "object" && note.imageUrl
-                              ? note.imageUrl
-                              : "/unknown.png";
-                          return (
-                            <span
-                              key={i}
-                              className="flex items-center gap-1.5 rounded-md border bg-muted/40 px-2 py-1.5 text-xs"
-                            >
-                              <Image
-                                unoptimized
-                                src={img}
-                                alt={name}
-                                width={24}
-                                height={24}
-                                className="object-contain"
-                              />
-                              {name}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                );
-              })}
-            </Accordion>
-          </div>
-        )}
+          {/* ── Similar fragrances ── */}
+          {similarFragrances.length > 0 && (
+            <div className="rounded-lg border bg-card p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                This perfume reminds me of
+              </p>
+              <ScrollArea className="w-full">
+                <div className="flex gap-3 pb-3">
+                  {similarFragrances.map((f) => (
+                    <FragranceCard key={f.ID} fragrance={f} />
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          )}
 
-        {/* ── Similar fragrances ── */}
-        {similarFragrances.length > 0 && (
-          <div className="rounded-lg border bg-card p-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              This perfume reminds me of
-            </p>
-            <ScrollArea className="w-full">
-              <div className="flex gap-3 pb-3">
-                {similarFragrances.map((f) => (
-                  <FragranceCard key={f.ID} fragrance={f} />
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        )}
-
-        {/* ── More from designer ── */}
-        {moreFromDesigner.length > 0 && (
-          <div className="rounded-lg border bg-card p-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              More from {fragrance.Brand}
-            </p>
-            <ScrollArea className="w-full">
-              <div className="flex gap-3 pb-3">
-                {moreFromDesigner.map((f) => (
-                  <FragranceCard key={f.ID} fragrance={f} />
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        )}
+          {/* ── More from designer ── */}
+          {moreFromDesigner.length > 0 && (
+            <div className="rounded-lg border bg-card p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                More from {fragrance.Brand}
+              </p>
+              <ScrollArea className="w-full">
+                <div className="flex gap-3 pb-3">
+                  {moreFromDesigner.map((f) => (
+                    <FragranceCard key={f.ID} fragrance={f} />
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );
