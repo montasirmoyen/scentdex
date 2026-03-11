@@ -31,7 +31,7 @@ export default function RootLayout({
     >
       <body>
         <TooltipProvider>
-          <ThemeProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
               <Navbar1 />
               {children}
           </ThemeProvider>
