@@ -4,6 +4,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Navbar1 } from "@/components/navbar1";
+import Footer from "@/components/footer";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
@@ -34,6 +35,7 @@ export default function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
               <Navbar1 />
               {children}
+              <Footer />
           </ThemeProvider>
         </TooltipProvider>
       </body>
