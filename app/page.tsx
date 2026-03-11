@@ -13,7 +13,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Menu, Star } from "lucide-react";
 
 import fragranceData from "@/data/fragrances.json";
 
@@ -339,6 +339,7 @@ export default function Page() {
                               src={fragrance["Image URL"] || "/fragrances/placeholder.jpg"}
                               alt={`${fragrance.Brand} ${fragrance.Name}`}
                               fill
+                              unoptimized
                               sizes="(min-width: 1280px) 25vw, (min-width: 640px) 33vw, 50vw"
                               className="object-contain p-2"
                               onError={() => handleImageError(fragrance.ID)}
@@ -351,7 +352,10 @@ export default function Page() {
                           <p className="line-clamp-1 text-xs text-muted-foreground">{fragrance.Brand}</p>
                           <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                             <span>{fragrance.Year || "N/A"}</span>
-                            <span>⭐ {fragrance.rating || "0.0"}</span>
+                            <span className="flex items-center gap-1">
+                              <Star className="size-3.5 fill-yellow-400 text-yellow-400" />
+                              {fragrance.rating || "N/A"}
+                            </span>
                           </div>
                         </div>
                       </article>
