@@ -1,7 +1,3 @@
-import { FacebookIcon, InstagramIcon, TwitterIcon, YoutubeIcon } from 'lucide-react'
-import Image from 'next/image'
-import { Separator } from '@/components/ui/separator'
-
 const Footer = () => {
     return (
         <footer>
