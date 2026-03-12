@@ -3,6 +3,8 @@ import OpenAI from 'openai';
 
 const API_KEY = process.env.OPENROUTER_API_KEY;
 const AI_MODEL = process.env.OPENROUTER_MODEL || 'nvidia/nemotron-3-super-120b-a12b:free';
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 10;
 
 const SYSTEM_PROMPT = `You are ScentDex AI, a fragrance specialist assistant.
 
@@ -23,6 +25,21 @@ type IncomingMessage = {
     role: 'user' | 'assistant';
     content: string;
 };
+
+type RateLimitEntry = {
+    count: number;
+    resetAt: number;
+};
+
+const globalForRateLimit = globalThis as typeof globalThis & {
+    scentDexAiRateLimit?: Map<string, RateLimitEntry>;
+};
+
+const rateLimitStore = globalForRateLimit.scentDexAiRateLimit ?? new Map<string, RateLimitEntry>();
+
+if (!globalForRateLimit.scentDexAiRateLimit) {
+    globalForRateLimit.scentDexAiRateLimit = rateLimitStore;
+}
 
 function isIncomingMessage(value: unknown): value is IncomingMessage {
     if (typeof value !== 'object' || value === null) {
@@ -58,6 +75,70 @@ function toResponseMessageContent(content: unknown): string {
     return '';
 }
 
+function getClientIdentifier(request: NextRequest): string {
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    if (forwardedFor) {
+        const firstAddress = forwardedFor.split(',')[0]?.trim();
+        if (firstAddress) {
+            return firstAddress;
+        }
+    }
+
+    const realIp = request.headers.get('x-real-ip');
+    if (realIp) {
+        return realIp;
+    }
+
+    return 'unknown';
+}
+
+function consumeRateLimit(identifier: string): {
+    allowed: boolean;
+    remaining: number;
+    retryAfterSeconds: number;
+    resetAt: number;
+} {
+    const now = Date.now();
+
+    for (const [key, entry] of rateLimitStore.entries()) {
+        if (entry.resetAt <= now) {
+            rateLimitStore.delete(key);
+        }
+    }
+
+    const existingEntry = rateLimitStore.get(identifier);
+
+    if (!existingEntry || existingEntry.resetAt <= now) {
+        const resetAt = now + RATE_LIMIT_WINDOW_MS;
+        rateLimitStore.set(identifier, { count: 1, resetAt });
+        return {
+            allowed: true,
+            remaining: RATE_LIMIT_MAX_REQUESTS - 1,
+            retryAfterSeconds: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000),
+            resetAt,
+        };
+    }
+
+    if (existingEntry.count >= RATE_LIMIT_MAX_REQUESTS) {
+        return {
+            allowed: false,
+            remaining: 0,
+            retryAfterSeconds: Math.max(1, Math.ceil((existingEntry.resetAt - now) / 1000)),
+            resetAt: existingEntry.resetAt,
+        };
+    }
+
+    existingEntry.count += 1;
+    rateLimitStore.set(identifier, existingEntry);
+
+    return {
+        allowed: true,
+        remaining: RATE_LIMIT_MAX_REQUESTS - existingEntry.count,
+        retryAfterSeconds: Math.max(1, Math.ceil((existingEntry.resetAt - now) / 1000)),
+        resetAt: existingEntry.resetAt,
+    };
+}
+
 export async function POST(request: NextRequest) {
     try {
         if (!API_KEY) {
@@ -65,6 +146,26 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(
                 { error: 'API key not configured' },
                 { status: 500 }
+            );
+        }
+
+        const identifier = getClientIdentifier(request);
+        const rateLimit = consumeRateLimit(identifier);
+
+        if (!rateLimit.allowed) {
+            return NextResponse.json(
+                {
+                    error: `Too many requests. Please wait ${rateLimit.retryAfterSeconds} seconds before trying again.`,
+                },
+                {
+                    status: 429,
+                    headers: {
+                        'Retry-After': String(rateLimit.retryAfterSeconds),
+                        'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
+                        'X-RateLimit-Remaining': String(rateLimit.remaining),
+                        'X-RateLimit-Reset': String(rateLimit.resetAt),
+                    },
+                }
             );
         }
 
@@ -122,11 +223,27 @@ export async function POST(request: NextRequest) {
         if (!response) {
             return NextResponse.json(
                 { error: 'The AI did not return a valid response. Please try again.' },
-                { status: 502 }
+                {
+                    status: 502,
+                    headers: {
+                        'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
+                        'X-RateLimit-Remaining': String(rateLimit.remaining),
+                        'X-RateLimit-Reset': String(rateLimit.resetAt),
+                    },
+                }
             );
         }
 
-        return NextResponse.json({ success: true, response });
+        return NextResponse.json(
+            { success: true, response },
+            {
+                headers: {
+                    'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
+                    'X-RateLimit-Remaining': String(rateLimit.remaining),
+                    'X-RateLimit-Reset': String(rateLimit.resetAt),
+                },
+            }
+        );
     } catch (error: unknown) {
         if (error instanceof OpenAI.APIError && error.status === 401) {
             return NextResponse.json(
