@@ -66,6 +66,7 @@ const Navbar1 = ({
   },
   menu = [
     { title: "Home", url: "/" },
+    { title: "Compare", url: "/compare" },
   ],
   auth = {
     login: { title: "Login", url: "#" },
