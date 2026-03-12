@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
+const COOLDOWN_SECONDS = 5;
+
 type ChatMessage = {
 	id: string;
 	role: "user" | "assistant";
@@ -32,6 +34,7 @@ export default function AiPage() {
 	]);
 	const [prompt, setPrompt] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
+	const [cooldownRemaining, setCooldownRemaining] = useState(0);
 	const [error, setError] = useState<string | null>(null);
 
 	const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -40,11 +43,27 @@ export default function AiPage() {
 		bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
 	}, [messages, isLoading]);
 
-	const canSubmit = useMemo(() => prompt.trim().length > 0 && !isLoading, [prompt, isLoading]);
+	useEffect(() => {
+		if (cooldownRemaining <= 0) {
+			return;
+		}
+
+		const timeout = window.setTimeout(() => {
+			setCooldownRemaining((current) => Math.max(0, current - 1));
+		}, 1000);
+
+		return () => window.clearTimeout(timeout);
+	}, [cooldownRemaining]);
+
+	const isCooldownActive = cooldownRemaining > 0;
+	const canSubmit = useMemo(
+		() => prompt.trim().length > 0 && !isLoading && !isCooldownActive,
+		[prompt, isLoading, isCooldownActive]
+	);
 
 	async function submitMessage(text: string) {
 		const trimmed = text.trim();
-		if (!trimmed || isLoading) {
+		if (!trimmed || isLoading || isCooldownActive) {
 			return;
 		}
 
@@ -97,6 +116,7 @@ export default function AiPage() {
 			setError(caughtError instanceof Error ? caughtError.message : "Something went wrong.");
 		} finally {
 			setIsLoading(false);
+			setCooldownRemaining(COOLDOWN_SECONDS);
 		}
 	}
 
@@ -150,7 +170,7 @@ export default function AiPage() {
 								size="sm"
 								variant="secondary"
 								onClick={() => submitMessage(question)}
-								disabled={isLoading}
+								disabled={isLoading || isCooldownActive}
 							>
 								<Sparkles className="size-3.5" />
 								{question}
@@ -213,16 +233,36 @@ export default function AiPage() {
 						<Input
 							value={prompt}
 							onChange={(event) => setPrompt(event.target.value)}
-							placeholder="Ask a fragrance question..."
-							disabled={isLoading}
+							placeholder={
+								isCooldownActive
+									? `Please wait ${cooldownRemaining}s before sending another question...`
+									: "Ask a fragrance question..."
+							}
+							disabled={isLoading || isCooldownActive}
 						/>
 						<div className="flex items-center justify-between gap-2">
-							<p className="text-xs text-muted-foreground">
-								Example: "Recommend a warm vanilla scent for winter nights."
-							</p>
+							{isCooldownActive ? (
+								<p className="text-xs font-medium text-amber-600">
+									Cooldown active: you can send again in {cooldownRemaining}s.
+								</p>
+							) : (
+								<p className="text-xs text-muted-foreground">
+									Example: "Recommend a warm vanilla scent for winter nights."
+								</p>
+							)}
 							<Button type="submit" disabled={!canSubmit}>
-								{isLoading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-								Send
+								{isLoading ? (
+									<Loader2 className="size-4 animate-spin" />
+								) : isCooldownActive ? (
+									<Sparkles className="size-4" />
+								) : (
+									<Send className="size-4" />
+								)}
+								{isLoading
+									? "Sending..."
+									: isCooldownActive
+										? `Wait ${cooldownRemaining}s`
+										: "Send"}
 							</Button>
 						</div>
 					</form>
