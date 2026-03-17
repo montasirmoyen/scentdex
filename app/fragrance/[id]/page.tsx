@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import fragranceData from "@/data/fragrances.json";
 import accords from "@/data/accords.json";
 import Link from "next/link";
@@ -28,6 +28,7 @@ import {
   Coffee,
   Star,
   ExternalLink,
+  Sparkles
 } from "lucide-react";
 
 const fragrances = fragranceData.map((f, index) => ({ ...f, ID: index }));
@@ -174,6 +175,7 @@ function FragranceCard({ fragrance }: { fragrance: any }) {
 // ── Page ───────────────────────────────────────────────────────────────────
 
 export default function FragrancePage() {
+  const router = useRouter();
   const params = useParams<{ id: string }>();
   const idParam = params?.id;
   const fragranceId = Number(idParam);
@@ -239,11 +241,12 @@ export default function FragrancePage() {
                 </div>
 
 
-                {/* Purchase */}
-                {fragrance["Purchase URL"] && (
-                  <div>
+                {/* Purchase & AI */}
+                <div className="flex gap-2">
+                  {fragrance["Purchase URL"] && (
                     <Button
                       size="sm"
+                      variant="outline"
                       onClick={() =>
                         window.open(fragrance["Purchase URL"], "_blank", "noopener,noreferrer")
                       }
@@ -251,8 +254,12 @@ export default function FragrancePage() {
                       <ExternalLink className="mr-1.5 size-3.5" />
                       Purchase
                     </Button>
-                  </div>
-                )}
+                  )}
+                  <Button size="sm" onClick={() => router.push("/ai")}>
+                    <Sparkles className="mr-1.5 size-3.5" />
+                    Ask AI
+                  </Button>
+                </div>
 
                 {/* Stats row */}
                 <div className="flex flex-wrap gap-3 text-sm">
