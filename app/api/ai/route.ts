@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import OpenAI from 'openai';
 
 const API_KEY = process.env.OPENROUTER_API_KEY;
-const AI_MODEL = process.env.OPENROUTER_MODEL || 'nvidia/nemotron-3-super-120b-a12b:free';
+const AI_MODEL = process.env.OPENROUTER_MODEL || 'qwen/qwen3-4b:free';
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 10;
 
