@@ -103,7 +103,7 @@ export default function AiPage() {
 				throw new Error("The assistant returned an invalid response.");
 			}
 
-			const assistantReply: string = data.response;
+			const assistantReply: string = data.response.replace(/^\s+/, "");
 
 			const nextAssistantMessage: ChatMessage = {
 				id: crypto.randomUUID(),
