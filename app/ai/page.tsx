@@ -16,6 +16,37 @@ type ChatMessage = {
 	content: string;
 };
 
+function renderMessageContent(content: string) {
+	const parts: Array<{ text: string; isBold: boolean }> = [];
+	const boldPattern = /\*\*(.+?)\*\*/g;
+	let lastIndex = 0;
+	let match: RegExpExecArray | null;
+
+	while ((match = boldPattern.exec(content)) !== null) {
+		const [fullMatch, boldText] = match;
+		const startIndex = match.index;
+
+		if (startIndex > lastIndex) {
+			parts.push({ text: content.slice(lastIndex, startIndex), isBold: false });
+		}
+
+		parts.push({ text: boldText, isBold: true });
+		lastIndex = startIndex + fullMatch.length;
+	}
+
+	if (lastIndex < content.length) {
+		parts.push({ text: content.slice(lastIndex), isBold: false });
+	}
+
+	if (parts.length === 0) {
+		return content;
+	}
+
+	return parts.map((part, index) =>
+		part.isBold ? <strong key={index}>{part.text}</strong> : <span key={index}>{part.text}</span>
+	);
+}
+
 const STARTER_QUESTIONS = [
 	"Recommend a long-lasting office fragrance for summer.",
 	"What are the main differences between citrus and woody scents?",
@@ -202,7 +233,7 @@ export default function AiPage() {
 													ScentDex AI
 												</p>
 											)}
-											<p className="whitespace-pre-wrap">{message.content}</p>
+												<p className="whitespace-pre-wrap">{renderMessageContent(message.content)}</p>
 										</div>
 									</div>
 								);
