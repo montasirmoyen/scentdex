@@ -1,10 +1,19 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import OpenAI from 'openai';
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
 const API_KEY = process.env.OPENROUTER_API_KEY;
 const AI_MODEL = process.env.OPENROUTER_MODEL || 'qwen/qwen3-4b:free';
-const RATE_LIMIT_WINDOW_MS = 60_000;
+const UPSTASH_REDIS_REST_URL = process.env.UPSTASH_REDIS_REST_URL;
+const UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+const RATE_LIMIT_WINDOW = '60 s';
 const RATE_LIMIT_MAX_REQUESTS = 10;
+const MAX_REQUEST_BYTES = 8 * 1024;
+const MAX_PROMPT_CHARS = 1_000;
+const FRAGRANCE_SCOPE_SUFFIX =
+    ' If the question is not fragrance-related, politely redirect the user to ask a fragrance-related question.';
 
 const SYSTEM_PROMPT = `You are ScentDex AI, a fragrance specialist assistant.
 
@@ -21,37 +30,29 @@ If the user asks about anything outside fragrance/perfume, politely refuse in on
 
 Be concise, practical, and clear. Never claim personal real-world experience. If information is uncertain, say so.`;
 
-type IncomingMessage = {
-    role: 'user' | 'assistant';
-    content: string;
-};
+const openai = new OpenAI({
+    baseURL: 'https://openrouter.ai/api/v1',
+    apiKey: API_KEY,
+    defaultHeaders: {
+        'X-Title': 'ScentDex',
+    },
+});
 
-type RateLimitEntry = {
-    count: number;
-    resetAt: number;
-};
+const redis =
+    UPSTASH_REDIS_REST_URL && UPSTASH_REDIS_REST_TOKEN
+        ? new Redis({
+              url: UPSTASH_REDIS_REST_URL,
+              token: UPSTASH_REDIS_REST_TOKEN,
+          })
+        : null;
 
-const globalForRateLimit = globalThis as typeof globalThis & {
-    scentDexAiRateLimit?: Map<string, RateLimitEntry>;
-};
-
-const rateLimitStore = globalForRateLimit.scentDexAiRateLimit ?? new Map<string, RateLimitEntry>();
-
-if (!globalForRateLimit.scentDexAiRateLimit) {
-    globalForRateLimit.scentDexAiRateLimit = rateLimitStore;
-}
-
-function isIncomingMessage(value: unknown): value is IncomingMessage {
-    if (typeof value !== 'object' || value === null) {
-        return false;
-    }
-
-    const maybeMessage = value as Record<string, unknown>;
-    return (
-        (maybeMessage.role === 'user' || maybeMessage.role === 'assistant') &&
-        typeof maybeMessage.content === 'string'
-    );
-}
+const ratelimit =
+    redis === null
+        ? null
+        : new Ratelimit({
+              redis,
+              limiter: Ratelimit.slidingWindow(RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW),
+          });
 
 function toResponseMessageContent(content: unknown): string {
     if (typeof content === 'string') {
@@ -89,54 +90,21 @@ function getClientIdentifier(request: NextRequest): string {
         return realIp;
     }
 
-    return 'unknown';
+    return request.headers.get('user-agent')?.slice(0, 120) || 'unknown-client';
 }
 
-function consumeRateLimit(identifier: string): {
-    allowed: boolean;
-    remaining: number;
-    retryAfterSeconds: number;
-    resetAt: number;
-} {
-    const now = Date.now();
-
-    for (const [key, entry] of rateLimitStore.entries()) {
-        if (entry.resetAt <= now) {
-            rateLimitStore.delete(key);
-        }
+function getContentLengthHeader(request: NextRequest): number | null {
+    const raw = request.headers.get('content-length');
+    if (!raw) {
+        return null;
     }
 
-    const existingEntry = rateLimitStore.get(identifier);
-
-    if (!existingEntry || existingEntry.resetAt <= now) {
-        const resetAt = now + RATE_LIMIT_WINDOW_MS;
-        rateLimitStore.set(identifier, { count: 1, resetAt });
-        return {
-            allowed: true,
-            remaining: RATE_LIMIT_MAX_REQUESTS - 1,
-            retryAfterSeconds: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000),
-            resetAt,
-        };
+    const parsed = Number.parseInt(raw, 10);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+        return null;
     }
 
-    if (existingEntry.count >= RATE_LIMIT_MAX_REQUESTS) {
-        return {
-            allowed: false,
-            remaining: 0,
-            retryAfterSeconds: Math.max(1, Math.ceil((existingEntry.resetAt - now) / 1000)),
-            resetAt: existingEntry.resetAt,
-        };
-    }
-
-    existingEntry.count += 1;
-    rateLimitStore.set(identifier, existingEntry);
-
-    return {
-        allowed: true,
-        remaining: RATE_LIMIT_MAX_REQUESTS - existingEntry.count,
-        retryAfterSeconds: Math.max(1, Math.ceil((existingEntry.resetAt - now) / 1000)),
-        resetAt: existingEntry.resetAt,
-    };
+    return parsed;
 }
 
 export async function POST(request: NextRequest) {
@@ -149,62 +117,90 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const identifier = getClientIdentifier(request);
-        const rateLimit = consumeRateLimit(identifier);
-
-        if (!rateLimit.allowed) {
+        if (!ratelimit) {
             return NextResponse.json(
                 {
-                    error: `Too many requests. Please wait ${rateLimit.retryAfterSeconds} seconds before trying again.`,
+                    error:
+                        'Shared rate limiter is not configured. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.',
+                },
+                { status: 500 }
+            );
+        }
+
+        const declaredLength = getContentLengthHeader(request);
+        if (declaredLength !== null && declaredLength > MAX_REQUEST_BYTES) {
+            return NextResponse.json(
+                {
+                    error: `Request payload is too large. Max size is ${MAX_REQUEST_BYTES} bytes.`,
+                },
+                { status: 413 }
+            );
+        }
+
+        const identifier = getClientIdentifier(request);
+        const rateLimit = await ratelimit.limit(`scentdex:ai:${identifier}`);
+
+        const retryAfterSeconds = Math.max(
+            1,
+            Math.ceil((rateLimit.reset - Date.now()) / 1000)
+        );
+
+        if (!rateLimit.success) {
+            return NextResponse.json(
+                {
+                    error: `Too many requests. Please wait ${retryAfterSeconds} seconds before trying again.`,
                 },
                 {
                     status: 429,
                     headers: {
-                        'Retry-After': String(rateLimit.retryAfterSeconds),
+                        'Retry-After': String(retryAfterSeconds),
                         'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
                         'X-RateLimit-Remaining': String(rateLimit.remaining),
-                        'X-RateLimit-Reset': String(rateLimit.resetAt),
+                        'X-RateLimit-Reset': String(rateLimit.reset),
                     },
                 }
             );
         }
 
-        const body: { messages?: unknown; prompt?: unknown } = await request.json();
-        const rawMessages: unknown[] = Array.isArray(body.messages) ? body.messages : [];
-        const prePrompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
-        const prompt = prePrompt + " - If the question is not fragrance-related, please politely redirect the user to ask a fragrance-related question. No matter what the user asks, the response must be fragrance-related.";
+        const rawBody = await request.text();
+        const requestBytes = new TextEncoder().encode(rawBody).length;
 
-        const history: IncomingMessage[] = rawMessages
-            .filter((message: unknown): message is IncomingMessage => isIncomingMessage(message))
-            .map((message: IncomingMessage) => ({
-                role: message.role,
-                content: message.content.trim(),
-            }))
-            .filter((message: IncomingMessage) => message.content.length > 0)
-            .slice(-12);
+        if (requestBytes > MAX_REQUEST_BYTES) {
+            return NextResponse.json(
+                {
+                    error: `Request payload is too large. Max size is ${MAX_REQUEST_BYTES} bytes.`,
+                },
+                { status: 413 }
+            );
+        }
 
-        const hasUserMessageInHistory = history.some(
-            (message: IncomingMessage) => message.role === 'user'
-        );
+        let body: { prompt?: unknown };
 
-        if (!hasUserMessageInHistory && prompt.length === 0) {
+        try {
+            body = JSON.parse(rawBody) as { prompt?: unknown };
+        } catch {
+            return NextResponse.json({ error: 'Invalid JSON payload.' }, { status: 400 });
+        }
+
+        const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
+
+        if (prompt.length === 0) {
             return NextResponse.json(
                 { error: 'Please provide a fragrance-related question.' },
                 { status: 400 }
             );
         }
 
-        if (!hasUserMessageInHistory && prompt.length > 0) {
-            history.push({ role: 'user', content: prompt });
+        if (prompt.length > MAX_PROMPT_CHARS) {
+            return NextResponse.json(
+                {
+                    error: `Prompt is too long. Max length is ${MAX_PROMPT_CHARS} characters.`,
+                },
+                { status: 413 }
+            );
         }
 
-        const openai = new OpenAI({
-            baseURL: 'https://openrouter.ai/api/v1',
-            apiKey: API_KEY,
-            defaultHeaders: {
-                'X-Title': 'ScentDex',
-            },
-        });
+        const scopedPrompt = `${prompt}${FRAGRANCE_SCOPE_SUFFIX}`;
 
         const completion = await openai.chat.completions.create({
             model: AI_MODEL,
@@ -213,7 +209,10 @@ export async function POST(request: NextRequest) {
                     role: 'system',
                     content: SYSTEM_PROMPT,
                 },
-                ...history,
+                {
+                    role: 'user',
+                    content: scopedPrompt,
+                },
             ],
             temperature: 0.6,
         });
@@ -228,7 +227,7 @@ export async function POST(request: NextRequest) {
                     headers: {
                         'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
                         'X-RateLimit-Remaining': String(rateLimit.remaining),
-                        'X-RateLimit-Reset': String(rateLimit.resetAt),
+                        'X-RateLimit-Reset': String(rateLimit.reset),
                     },
                 }
             );
@@ -240,7 +239,7 @@ export async function POST(request: NextRequest) {
                 headers: {
                     'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
                     'X-RateLimit-Remaining': String(rateLimit.remaining),
-                    'X-RateLimit-Reset': String(rateLimit.resetAt),
+                    'X-RateLimit-Reset': String(rateLimit.reset),
                 },
             }
         );
