@@ -117,10 +117,7 @@ export default function AiPage() {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({
-					messages: nextMessages.map((message) => ({
-						role: message.role,
-						content: message.content,
-					})),
+					prompt: trimmed,
 				}),
 			});
 
