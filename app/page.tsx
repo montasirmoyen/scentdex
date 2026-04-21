@@ -23,6 +23,7 @@ const testimonials: TestimonialItem[] = [
 ]
 
 type HomepageFragrance = {
+    ID: number
     Name: string
     Brand: string
     Gender: string
@@ -40,7 +41,10 @@ const featuredFragranceNames = [
 ] as const
 
 const fragranceLookup = new Map(
-    (fragranceData as HomepageFragrance[]).map((fragrance) => [fragrance.Name, fragrance])
+    (fragranceData as Omit<HomepageFragrance, 'ID'>[]).map((fragrance, index) => [
+        fragrance.Name,
+        { ...fragrance, ID: index }
+    ])
 )
 
 const productList: ProductItem[] = featuredFragranceNames.map((name) => {
@@ -51,6 +55,7 @@ const productList: ProductItem[] = featuredFragranceNames.map((name) => {
     }
 
     return {
+        ID: fragrance.ID,
         image: fragrance['Image URL'],
         imgAlt: fragrance.Name,
         name: fragrance.Name,
