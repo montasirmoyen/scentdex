@@ -92,10 +92,10 @@ const Navbar1 = ({
               )}
               <span>
                 <Image
-                  src="/night.png"
+                  src="/sd-logo.png"
                   alt="ScentDex Logo"
-                  width={20}
-                  height={20}
+                  width={24}
+                  height={24}
                   className="dark:invert"
                 />
               </span>
