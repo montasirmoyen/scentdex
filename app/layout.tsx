@@ -1,11 +1,33 @@
-import { Geist, Geist_Mono, Inter } from "next/font/google"
+import { Geist_Mono, Inter } from "next/font/google"
+import type { Metadata } from "next"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { Navbar1 } from "@/components/navbar1";
 import { Footer } from "@/components/footer1";
 import { cn } from "@/lib/utils";
+import Header from "@/components/ui/header";
+import type { NavigationSection } from "@/components/ui/header";
+
+const navigationData: NavigationSection[] = [
+  {
+    title: "Home",
+    href: "/",
+    isActive: true,
+  },
+  {
+    title: "Library",
+    href: "/library",
+  },
+  {
+    title: "Compare",
+    href: "/compare",
+  },
+  {
+    title: "AI",
+    href: "/ai",
+  }
+];
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -14,8 +36,11 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 })
 
-export const metadata = {
-  title: "ScentDex",
+export const metadata: Metadata = {
+  title: {
+    default: "ScentDex",
+    template: "%s - ScentDex",
+  },
   description: "",
 }
 
@@ -33,9 +58,9 @@ export default function RootLayout({
       <body>
         <TooltipProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-              <Navbar1 />
-              {children}
-              <Footer />
+            <Header navigationData={navigationData} />
+            {children}
+            <Footer />
           </ThemeProvider>
         </TooltipProvider>
       </body>
