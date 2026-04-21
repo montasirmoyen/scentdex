@@ -16,11 +16,11 @@ const navigationData: NavigationSection[] = [
   },
   {
     title: "Library",
-    href: "library",
+    href: "/library",
   },
   {
     title: "AI",
-    href: "ai",
+    href: "/ai",
   }
 ];
 
