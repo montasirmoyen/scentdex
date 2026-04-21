@@ -1,6 +1,9 @@
 import AgencyHeroSection from "@/components/hero-section";
+import ProductList from '@/components/ui/product-list'
 import TestimonialsComponent from '@/components/ui/testimonials'
+import type { ProductItem } from '@/components/ui/product-list'
 import type { TestimonialItem } from '@/components/ui/testimonials'
+import fragranceData from '@/data/fragrances.json'
 
 const testimonials: TestimonialItem[] = [
     {
@@ -18,10 +21,49 @@ const testimonials: TestimonialItem[] = [
         content: "ScentDex makes my fragrance research so much easier. The AI-powered recommendations are spot on, and the user interface is incredibly intuitive"
     }
 ]
+
+type HomepageFragrance = {
+    Name: string
+    Brand: string
+    Gender: string
+    Price: string
+    'Image URL': string
+}
+
+const featuredFragranceNames = [
+    'Jean Paul Gaultier Le Male Elixir',
+    'Sauvage Eau de Parfum for men',
+    'Emporio Armani Stronger With You Intensely',
+    'Creed Aventus',
+    'Eros Parfum for men',
+    'Y'
+] as const
+
+const fragranceLookup = new Map(
+    (fragranceData as HomepageFragrance[]).map((fragrance) => [fragrance.Name, fragrance])
+)
+
+const productList: ProductItem[] = featuredFragranceNames.map((name) => {
+    const fragrance = fragranceLookup.get(name)
+
+    if (!fragrance) {
+        throw new Error(`Missing homepage fragrance: ${name}`)
+    }
+
+    return {
+        image: fragrance['Image URL'],
+        imgAlt: fragrance.Name,
+        name: fragrance.Name,
+        price: Number.parseFloat(fragrance.Price) || 0,
+        badges: [fragrance.Brand, fragrance.Gender]
+    }
+})
+
 export default function page() {
     return (
         <div>
             <AgencyHeroSection />
+            <ProductList products={productList} />
             <TestimonialsComponent testimonials={testimonials} />
         </div>
     )
