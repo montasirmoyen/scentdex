@@ -1,11 +1,11 @@
 "use client";
 import { Marquee } from "@/components/ui/marquee";
 import { motion } from "motion/react";
+import Image from "next/image";
 
 export interface BrandList {
   image: string;
   name: string;
-  lightimg: string;
 }
 
 function BrandSlider({ brandList }: { brandList: BrandList[] }) {
@@ -24,7 +24,7 @@ function BrandSlider({ brandList }: { brandList: BrandList[] }) {
               <div className="flex items-center justify-center gap-4">
                 <div className="hidden md:block h-0.5 w-40 bg-linear-to-l from-muted-foreground to-white dark:from-muted-foreground dark:to-transparent opacity-20" />
                 <p className="text-sm font-normal sm:px-2 px-10 text-muted-foreground text-center">
-                  Loved by 1000+ big and small brands around the worlds
+                  Discover fragrances from the most luxurious brands
                 </p>
                 <div className="hidden md:block h-0.5 w-40 bg-linear-to-r from-muted-foreground to-white dark:from-muted-foreground dark:to-transparent opacity-20" />
               </div>
@@ -34,15 +34,12 @@ function BrandSlider({ brandList }: { brandList: BrandList[] }) {
                 <Marquee pauseOnHover className="[--duration:20s] p-0">
                   {brandList.map((brand, index) => (
                     <div key={index}>
-                      <img
+                      <Image
                         src={brand.image}
                         alt={brand.name}
-                        className="w-36 h-8 mr-6 lg:mr-20 dark:hidden"
-                      />
-                      <img
-                        src={brand.lightimg}
-                        alt={brand.name}
-                        className="hidden dark:block w-36 h-8 mr-12 lg:mr-20"
+                        width={64}
+                        height={64}
+                        className="mr-6 lg:mr-20 dark:invert"
                       />
                     </div>
                   ))}
