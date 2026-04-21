@@ -7,6 +7,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 export type ProductItem = {
+    ID: number
     image: string
     imgAlt: string
     name: string
@@ -21,7 +22,7 @@ type ProductProps = {
 
 const ProductList = ({ products }: ProductProps) => {
     return (
-        <section className='py-8 sm:py-16 lg:py-24'>
+        <section className='py-8 sm:py-16 lg:py-24 mt-14'>
             <div className='mx-auto max-w-7xl space-y-12 px-4 sm:space-y-16 sm:px-6 lg:space-y-24 lg:px-8'>
                 <div className='space-y-4 text-center'>
                     <p className='text-sm font-medium'>Popular fragrances</p>
@@ -30,10 +31,9 @@ const ProductList = ({ products }: ProductProps) => {
 
                 <div className='mx-auto max-w-4xl grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
                     {/* Product Cards */}
-                    {products.map((product, index) => (
-                        <Link key={product.name} href={`/fragrance/${product.name}`}>
+                    {products.map((product) => (
+                        <Link key={product.ID} href={`/fragrance/${product.ID}`}>
                             <article
-                                key={index}
                                 className='overflow-hidden rounded-lg border bg-card transition-all hover:-translate-y-0.5 hover:shadow-md'
                             >
                                 <div className='relative aspect-square border-b bg-white'>
