@@ -23,7 +23,7 @@ const ProductList = ({ products }: ProductProps) => {
     return (
         <section className='py-8 sm:py-16 lg:py-24'>
             <div className='mx-auto max-w-7xl space-y-12 px-4 sm:space-y-16 sm:px-6 lg:space-y-24 lg:px-8'>
-                <div className='space-y-4'>
+                <div className='space-y-4 text-center'>
                     <p className='text-sm font-medium'>Popular fragrances</p>
                     <h2 className='text-2xl font-semibold sm:text-3xl lg:text-4xl'>Trending Scent Picks</h2>
                 </div>
