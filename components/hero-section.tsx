@@ -20,22 +20,6 @@ export default function AgencyHeroSection() {
     },
   ];
 
-  const navigationData: NavigationSection[] = [
-    {
-      title: "Home",
-      href: "/",
-      isActive: true,
-    },
-    {
-      title: "Library",
-      href: "library",
-    },
-    {
-      title: "AI",
-      href: "ai",
-    }
-  ];
-
   const brandList: BrandList[] = [
     {
       image: "/ysl-logo.png",
@@ -57,7 +41,6 @@ export default function AgencyHeroSection() {
 
   return (
     <div className="relative">
-      <Header navigationData={navigationData} />
       <main>
         <HeroSection avatarList={avatarList} />
         <BrandSlider brandList={brandList} />
