@@ -1,4 +1,4 @@
-import { FaFacebook, FaInstagram, FaYoutube, FaTwitter } from 'react-icons/fa'
+import { FaGithub } from 'react-icons/fa'
 
 import { Separator } from '@/components/ui/separator'
 import Image from 'next/image'
@@ -15,17 +15,8 @@ const Footer = () => {
         </a>
 
         <div className='flex items-center gap-4'>
-          <a href='#'>
-            <FaFacebook className='size-5' />
-          </a>
-          <a href='#'>
-            <FaInstagram className='size-5' />
-          </a>
-          <a href='#'>
-            <FaTwitter className='size-5' />
-          </a>
-          <a href='#'>
-            <FaYoutube className='size-5' />
+          <a href='https://github.com/montasirmoyen' target='_blank' rel='noopener noreferrer'>
+            <FaGithub className='size-8 hover:scale-115 hover:text-muted-foreground transition-all' />
           </a>
         </div>
       </div>
