@@ -29,14 +29,14 @@ const ProductList = ({ products }: ProductProps) => {
                     <h2 className='text-2xl font-semibold sm:text-3xl lg:text-4xl'>Trending Scent Picks</h2>
                 </div>
 
-                <div className='mx-auto max-w-4xl grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
+                <div className='mx-auto grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
                     {/* Product Cards */}
                     {products.map((product) => (
                         <Link key={product.ID} href={`/fragrance/${product.ID}`}>
                             <article
-                                className='overflow-hidden rounded-lg border bg-card transition-all hover:-translate-y-0.5 hover:shadow-md'
+                                className='overflow-hidden rounded-lg bg-card transition-all hover:-translate-y-0.5 hover:shadow-md'
                             >
-                                <div className='relative aspect-square border-b bg-white'>
+                                <div className='relative aspect-square bg-white'>
                                     <Image
                                         src={product.image}
                                         alt={product.imgAlt}
@@ -52,17 +52,8 @@ const ProductList = ({ products }: ProductProps) => {
                                     )}
                                 </div>
 
-                                <div className='space-y-1 p-3'>
-                                    <h3 className='line-clamp-1 text-sm font-semibold'>{product.name}</h3>
-
-                                    <div className='mt-3 flex gap-1'>
-                                        <Button variant='ghost' size='sm' className='flex-1'>
-                                            <HeartIcon className='size-4' />
-                                        </Button>
-                                        <Button variant='ghost' size='sm' className='flex-1'>
-                                            <ShoppingCartIcon className='size-4' />
-                                        </Button>
-                                    </div>
+                                <div className='w-full space-y-1 p-3'>
+                                    <h3 className='text-center text-sm font-semibold'>{product.name}</h3>
                                 </div>
                             </article>
                         </Link>
