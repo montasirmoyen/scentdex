@@ -36,7 +36,7 @@ const ProductList = ({ products }: ProductProps) => {
                             <article
                                 className='overflow-hidden rounded-lg bg-card transition-all hover:-translate-y-0.5 hover:shadow-md'
                             >
-                                <div className='relative aspect-square bg-white'>
+                                <div className='relative aspect-square bg-white rounded-3xl'>
                                     <Image
                                         src={product.image}
                                         alt={product.imgAlt}
@@ -52,7 +52,7 @@ const ProductList = ({ products }: ProductProps) => {
                                     )}
                                 </div>
 
-                                <div className='w-full space-y-1 p-3'>
+                                <div className='w-full space-y-1 p-3 bg-background text-background-foreground'>
                                     <h3 className='text-center text-sm font-semibold'>{product.name}</h3>
                                 </div>
                             </article>
