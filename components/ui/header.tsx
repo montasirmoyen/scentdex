@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export type NavigationSection = {
@@ -25,6 +26,17 @@ type HeaderProps = {
 const Header = ({ navigationData, className }: HeaderProps) => {
     const [sticky, setSticky] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
+    const pathname = usePathname();
+
+    const isRouteActive = useCallback(
+        (href: string) => {
+            if (href === "/") return pathname === "/";
+            return pathname === href || pathname.startsWith(`${href}/`);
+        },
+        [pathname],
+    );
+
+    const isHomePage = pathname === "/";
 
     const handleScroll = useCallback(() => {
         setSticky(window.scrollY >= 50);
@@ -46,10 +58,10 @@ const Header = ({ navigationData, className }: HeaderProps) => {
 
     return (
         <motion.header
-            initial={{ opacity: 0, y: -32 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, ease: "easeInOut" }}
+            initial={isHomePage ? { opacity: 0, y: -32 } : undefined}
+            whileInView={isHomePage ? { opacity: 1, y: 0 } : undefined}
+            viewport={isHomePage ? { once: true } : undefined}
+            transition={isHomePage ? { duration: 0.7, ease: "easeInOut" } : undefined}
             className={cn(
                 "inset-x-0 z-50 px-4 flex items-center justify-center sticky top-0 h-20",
                 className,
@@ -80,7 +92,10 @@ const Header = ({ navigationData, className }: HeaderProps) => {
                                 <NavigationMenuItem key={navItem.title}>
                                     <NavigationMenuLink
                                         href={navItem.href}
-                                        className={cn("px-2 lg:px-4 py-2 text-sm font-medium rounded-full text-muted-foreground hover:text-foreground hover:bg-background outline outline-transparent hover:outline-border hover:shadow-xs transition tracking-normal", navItem.isActive ? "bg-background text-foreground" : "")}
+                                        className={cn(
+                                            "px-2 lg:px-4 py-2 text-sm font-medium rounded-full text-muted-foreground hover:text-foreground hover:bg-background outline outline-transparent hover:outline-border hover:shadow-xs transition tracking-normal",
+                                            isRouteActive(navItem.href) ? "bg-background text-foreground" : "",
+                                        )}
                                     >
                                         {navItem.title}
                                     </NavigationMenuLink>
@@ -134,8 +149,8 @@ const Header = ({ navigationData, className }: HeaderProps) => {
                                                         <NavigationMenuLink
                                                             href={item.href}
                                                             className={cn(
-                                                                "group/nav flex items-center text-2xl font-semibold tracking-tight transition-all p-0 hover:bg-transparent focus:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent",
-                                                                item.isActive
+                                                                "group/nav flex items-center text-2xl font-semibold tracking-tight transition-all p-0 hover:bg-transparent focus:bg-transparent data-active:bg-transparent data-state-open:bg-transparent",
+                                                                isRouteActive(item.href)
                                                                     ? "text-primary"
                                                                     : "text-muted-foreground hover:text-foreground hover:translate-x-2",
                                                             )}
@@ -143,7 +158,7 @@ const Header = ({ navigationData, className }: HeaderProps) => {
                                                             <div
                                                                 className={cn(
                                                                     "h-0.5 bg-primary transition-all duration-300 overflow-hidden",
-                                                                    item.isActive
+                                                                    isRouteActive(item.href)
                                                                         ? "w-4 mr-2 opacity-100"
                                                                         : "w-0 opacity-0 group-hover/nav:w-4 group-hover/nav:mr-2 group-hover/nav:opacity-100",
                                                                 )}
