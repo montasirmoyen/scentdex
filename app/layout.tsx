@@ -19,6 +19,10 @@ const navigationData: NavigationSection[] = [
     href: "/library",
   },
   {
+    title: "Compare",
+    href: "/compare",
+  },
+  {
     title: "AI",
     href: "/ai",
   }
