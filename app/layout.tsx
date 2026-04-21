@@ -1,4 +1,5 @@
 import { Geist_Mono, Inter } from "next/font/google"
+import type { Metadata } from "next"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -35,8 +36,11 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 })
 
-export const metadata = {
-  title: "ScentDex",
+export const metadata: Metadata = {
+  title: {
+    default: "ScentDex",
+    template: "%s - ScentDex",
+  },
   description: "",
 }
 
