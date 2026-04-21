@@ -37,10 +37,10 @@ const TestimonialsComponent = ({ testimonials }: TestimonialsComponentProps) => 
               Testimonials
             </Badge>
             <h2 className='text-2xl font-semibold sm:text-3xl lg:text-4xl'>
-              Trusted by students
+              Trusted by fragrance enthusiasts
             </h2>
             <p className='text-muted-foreground text-xl'>
-              From finding the best professors to getting low-stress class recommendations, RamAI has been a game-changer for students.
+              Hear from our satisfied users who have found their perfect scent with ScentDex.
             </p>
           </div>
 
